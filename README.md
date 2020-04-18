@@ -1,2 +1,2 @@
 # weighted-vq
-Density Sensitive VQ for similairty Search.
+Density Sensitive Vector Quantization for Similarity Search.
