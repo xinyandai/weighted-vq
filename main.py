@@ -1,17 +1,23 @@
-import tqdm
 import math
 import numpy as np
 
+from tqdm import tqdm
 from vecs_io import loader
 from sorter import BatchSorter
 from weighted_vq import weighted_kmeans
 
 
-def all_density(x):
+def all_density(x, bs=2**12, verbose=True):
+    n, d = x.shape
+    kernel = np.empty(shape=n, dtype=x.dtype)
     x = np.sum(x**2, axis=1, keepdims=True)
-    d = -2.0 * (x @ x.T) + x + x.T
-    kernel = np.exp(-d / 2.0)
-    return np.sum(kernel, axis=1)
+    iter = n // bs + 1
+
+    for i in tqdm(range(iter)) if verbose else range(iter):
+        batch = x[i * bs : (i + 1) * bs]
+        d = -2.0 * np.dot(batch, x.T) + batch + x.T
+        kernel[i * bs : (i + 1) * bs] =np.sum(np.exp(-d / 2.0), axis=1)
+    return kernel
 
 
 def execute(compressed, X, Q, G, metric):
@@ -33,7 +39,8 @@ if __name__ == '__main__':
     Ks = 256
     metric = 'product'
 
-    X, T, Q, G = loader(dataset, topk, metric, folder='../../data/')
+    X, _, Q, G = loader(dataset, topk, metric, folder='../../data/')
+    assert G is not None
 
     density = all_density(X)
     centroid, codes = weighted_kmeans(X, w=density, k=256, iter=20, minit='points')

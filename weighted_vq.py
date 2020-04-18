@@ -56,16 +56,19 @@ def weighted_kmeans(data, w, k, iter=10, minit='random',
         else:
             code_book = init_meth(data, k)
 
+    cluster_means = _vq.update_cluster_means
     for _ in tqdm(range(iter)) if verbose else range(iter):
         # Compute the nearest neighbor for each obs using the current code book
         label = _vq.vq(data, code_book)[0]
         # Update the code book by computing centroids
         if w is None:
-            new_code_book, has_members = _vq.update_cluster_means(data, label, nc)
+            new_code_book, has_members = cluster_means(data, label, nc)
         else:
-            new_code_book, has_members = _vq.update_cluster_means(data * w, label, nc)
-            density_sum, _ = _vq.update_cluster_means(w, label, nc)
-            new_code_book /= density_sum
+            new_code_book, has_members = cluster_means(data * w, label, nc)
+            density_sum, _ = cluster_means(w, label, nc)
+            new_code_book = np.divide(new_code_book,
+                                      density_sum,
+                                      where=density_sum != 0)
         if not has_members.all():
             miss_meth()
             # Set the empty clusters to their previous positions
