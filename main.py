@@ -42,6 +42,10 @@ if __name__ == '__main__':
     X, _, Q, G = loader(dataset, topk, metric, folder='../../data/')
     assert G is not None
 
+    norm = np.max(np.linalg.norm(X, axis=1))
+    X /= norm 
+    Q /= norm 
+
     density = all_density(X)
     centroid, codes = weighted_kmeans(X, w=density, k=256, iter=20, minit='points')
     compressed = centroid[codes, :]
