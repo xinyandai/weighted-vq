@@ -1,3 +1,4 @@
+import os
 import math
 import numpy as np
 
@@ -7,7 +8,13 @@ from sorter import BatchSorter
 from weighted_vq import weighted_kmeans
 
 
-def all_density(x, bs=2**12, verbose=True):
+def all_density(x, dataset, bs=2**12, verbose=True, bandwidth=2.0):
+    os.makedirs("density/", exist_ok=True)
+    file_name = 'density/{}_{}.npy'.format(dataset, bandwidth)
+    if os.path.isfile(file_name):
+        print("# loading indices from file")
+        return np.load(file_name)
+
     n, d = x.shape
     kernel = np.empty(shape=n, dtype=x.dtype)
     x = np.sum(x**2, axis=1, keepdims=True)
@@ -16,7 +23,9 @@ def all_density(x, bs=2**12, verbose=True):
     for i in tqdm(range(iter)) if verbose else range(iter):
         batch = x[i * bs : (i + 1) * bs]
         d = -2.0 * np.dot(batch, x.T) + batch + x.T
-        kernel[i * bs : (i + 1) * bs] =np.sum(np.exp(-d / 2.0), axis=1)
+        kernel[i * bs : (i + 1) * bs] =np.sum(np.exp(-d / bandwidth), axis=1)
+
+    np.save(file_name, kernel)
     return kernel
 
 
@@ -38,15 +47,20 @@ if __name__ == '__main__':
     codebook = 4
     Ks = 256
     metric = 'product'
+    bandwidth = 0.02
+
+    # metric = 'euclid'
+    # bandwidth = 2
 
     X, _, Q, G = loader(dataset, topk, metric, folder='../../data/')
     assert G is not None
 
     norm = np.max(np.linalg.norm(X, axis=1))
-    X /= norm 
-    Q /= norm 
+    X /= norm
+    Q /= norm
 
-    density = all_density(X)
+    density = all_density(X, dataset=dataset, bandwidth=bandwidth)
+    print(density)
     centroid, codes = weighted_kmeans(X, w=density, k=256, iter=20, minit='points')
     compressed = centroid[codes, :]
     execute(compressed, X, Q, G, metric)
