@@ -18,7 +18,7 @@ def run(dataset, metric, bandwidths, seed):
 
     dir = "logs/{}/{}/{}".format(dataset, metric, seed)
     os.makedirs(dir, exist_ok=True)
-    filename = dir + "pq8_original_kmeans.txt"
+    filename = dir + "/pq8_original_kmeans.txt"
     print("writing to filename {}".format(filename))
 
     np.random.seed(seed)
