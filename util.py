@@ -5,6 +5,16 @@ from tqdm import tqdm
 from multiprocessing import Pool
 
 
+def normalize(vecs):
+    norms = np.linalg.norm(vecs, axis=1)
+    norms_matrix = norms[:, np.newaxis]
+    # divide by zero problem
+    normalized_vecs = np.divide(vecs, norms_matrix,
+                                out=np.zeros_like(vecs),
+                                where=norms_matrix != 0)
+    return norms, normalized_vecs
+
+
 def l2_dist(q: np.ndarray, x: np.ndarray):
     assert len(q.shape) == 2
     assert len(x.shape) == 2

@@ -28,7 +28,6 @@ def weighted_kmeans(data, w, k, iter=10, minit='random',
 
     data = _asarray_validated(data, check_finite=check_finite)
 
-
     if data.size < 1:
         raise ValueError("Empty input is not supported.")
 

@@ -4,7 +4,7 @@ import numpy as np
 from kde import all_density
 from util import test_recall
 from vecs_io import loader
-from weighted_vq import weighted_kmeans
+from vq.weighted_vq import weighted_kmeans
 
 
 def run(dataset, metric, bandwidths):
