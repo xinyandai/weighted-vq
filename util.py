@@ -1,3 +1,4 @@
+import sys
 import math
 import numpy as np
 from tqdm import tqdm
@@ -27,7 +28,7 @@ def arg_sort(q, x, metric):
 def batch_arg_sort(q, x, k , bs, metric, verbose):
     iter = len(q) // bs + 1
     idx = np.empty(shape=(len(q), k))
-    for i in tqdm(range(iter)) if verbose else range(iter):
+    for i in tqdm(range(iter), desc="arg sort") if verbose else range(iter):
         batch_index = idx[i * bs : (i + 1) * bs, :]
         batch_query = q[i * bs : (i + 1) * bs, :]
         batch_index[:, :] = arg_sort(batch_query, x, metric)[:, :k]
@@ -41,28 +42,32 @@ def intersect_sizes(args):
     return np.array([len(np.intersect1d(g, list(id))) for g, id in zip(gs, ids)])
 
 
-def test_recall(X, Q, G, metric, bs=100, k=2**16, verbose=True):
+def test_recall(X, Q, G, metric, bs=100, k=2**12, verbose=True, file=sys.stdout):
     ks = np.array([1, 5, 10, 20, 50, 100, 1000])
     k = np.min([len(X), k])
     Ts = [2 ** i for i in range(1 + int(math.log2(k)))]
     sort_idx = batch_arg_sort(Q, X, k, bs, metric, verbose)
 
-    print("# Probed \t Items \t", end="")
+    print("# Probed \t Items \t", end="", file=file)
     for top_k in ks:
-        print("top-%d\t" % (top_k), end="")
-    print()
+        print("top-%d\t" % (top_k), end="", file=file)
+    print(file=file)
     p = Pool(len(ks))
     for t in Ts:
         ids = sort_idx[:, :t]
         items = np.mean([len(id) for id in ids])
-        print("%6d \t %6d \t" % (t, items), end="")
-        # tps = [intersect_sizes(G[:, :top_k], ids) / float(top_k) for top_k in ks]
-        tps = p.map(intersect_sizes, [(G[:, :top_k], ids) for top_k in ks])
-        tps = np.array(list(tps)) / ks[:, np.newaxis]
+        print("%6d \t %6d \t" % (t, items), end="", file=file)
+        try:
+            tps = p.map(intersect_sizes, [(G[:, :top_k], ids) for top_k in ks])
+            tps = np.array(list(tps)) / ks[:, np.newaxis]
+        except:
+            import gc
+            gc.collect()
+            tps = [intersect_sizes((G[:, :top_k], ids)) / float(top_k) for top_k in ks]
         rcs = [np.mean(t) for t in tps]
         vrs = [np.std(t) for t in tps]
         for rc in rcs:
-            print("%.4f \t" % rc, end="")
-        # for vr in vrs:
-        #     print("%.4f \t" % vr, end="")
-        print()
+            print("%.4f \t" % rc, end="", file=file)
+        for vr in vrs:
+            print("%.4f \t" % vr, end="", file=file)
+        print(file=file)
