@@ -42,7 +42,7 @@ class PQ(object):
             "the number of training vector" " should be more than Ks"
         )
         self.Dim = D
-        self.Ds = split_dim(self.Ds, self.M)
+        self.Ds = split_dim(self.Dim, self.M)
         # [m][ks][ds]: m-th subspace, ks-the codeword, ds-th dim
         codes_shape = (self.M, self.Ks, np.max(self.Ds))
         self.codewords = np.zeros(codes_shape, dtype=self.data_type)
