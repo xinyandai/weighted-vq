@@ -34,7 +34,8 @@ def run(dataset, metric, bandwidths, seed):
 
         pq = PQ(M=8, Ks=256)
         compressed = pq.fit(X, w=density, iter=20).compress(X)
-        test_recall(compressed, Q, G, metric=metric, file=open(filename, 'w'))
+        with open(filename, 'w') as file:
+            test_recall(compressed, Q, G, metric=metric, file=file)
         del compressed
         del pq
         del density
