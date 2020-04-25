@@ -20,7 +20,7 @@ def weighted_kmeans(data, w, k, iter=10, minit='random',
         i'th observation is closest to.
     """
     n, d = data.shape
-    if w is not None:
+    if type(w) is np.ndarray:
         w = w.reshape((n, 1))
 
     assert int(iter) > 0, "Invalid iter (%s)" % iter
@@ -57,17 +57,25 @@ def weighted_kmeans(data, w, k, iter=10, minit='random',
 
     cluster_means = _vq.update_cluster_means
     for _ in tqdm(range(iter)) if verbose else range(iter):
+        def _weighted_cluster_means(w_):
+            new_code_book, has_members = cluster_means(data * w_, label, nc)
+            density_sum, _ = cluster_means(w_, label, nc)
+            new_code_book = np.divide(new_code_book,
+                                      density_sum,
+                                      where=density_sum != 0)
+            return new_code_book, has_members
         # Compute the nearest neighbor for each obs using the current code book
         label = _vq.vq(data, code_book)[0]
         # Update the code book by computing centroids
         if w is None:
             new_code_book, has_members = cluster_means(data, label, nc)
+        elif w == -1:
+            # number of element in each cluster
+            count = np.bincount(label, minlength=k)
+            density = np.reshape(count[label], (n ,1)).astype(data.dtype)
+            new_code_book, has_members = _weighted_cluster_means(density)
         else:
-            new_code_book, has_members = cluster_means(data * w, label, nc)
-            density_sum, _ = cluster_means(w, label, nc)
-            new_code_book = np.divide(new_code_book,
-                                      density_sum,
-                                      where=density_sum != 0)
+            new_code_book, has_members = _weighted_cluster_means(w)
         if not has_members.all():
             miss_meth()
             # Set the empty clusters to their previous positions
