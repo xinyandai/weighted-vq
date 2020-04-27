@@ -27,14 +27,16 @@ def run(dataset, metric, bandwidths, seed):
     np.random.seed(seed)
     pq = PQ(M=codebook, Ks=256)
     compressed = pq.fit(X, w=None, iter=20).compress(X)
-    test_recall(compressed, Q, G, metric=metric, file=open(filename, 'w'))
+    with open(filename, 'w') as file:
+        test_recall(compressed, Q, G, metric=metric, file=file)
 
     filename = dir + "/pq{}_balance_kmeans.txt".format(codebook)
     print("writing to filename {}".format(filename))
     np.random.seed(seed)
     pq = PQ(M=codebook, Ks=256)
     compressed = pq.fit(X, w=-1, iter=20).compress(X)
-    test_recall(compressed, Q, G, metric=metric, file=open(filename, "w"))
+    with open(filename, 'w') as file:
+        test_recall(compressed, Q, G, metric=metric, file=open(filename, "w"))
 
     for bandwidth in bandwidths:
         filename = "{}/pq{}_weighted_kmeans_{}.txt".format(dir, codebook, bandwidth)
