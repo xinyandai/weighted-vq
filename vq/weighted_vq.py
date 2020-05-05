@@ -70,13 +70,13 @@ def weighted_kmeans(data, w, k, iter=10, minit='random',
         # Update the code book by computing centroids
         if w is None:
             new_code_book, has_members = cluster_means(data, label, nc)
-        elif isinstance(w, int):
-            if w == -1:
+        elif isinstance(w, str):
+            if w == "cluster_size":
                 # number of element in each cluster
                 count = np.bincount(label, minlength=k)
                 weight = np.reshape(count[label], (n, 1)).astype(data.dtype)
                 new_code_book, has_members = _weighted_cluster_means(weight)
-            if w == -2:
+            if w == "cluster_radius":
                 weight = np.reshape(dist, (n, 1))
                 new_code_book, has_members = _weighted_cluster_means(weight)
         else:

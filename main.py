@@ -34,7 +34,7 @@ def run(dataset, metric, bandwidths, seed):
     print("writing to filename {}".format(filename))
     np.random.seed(seed)
     pq = PQ(M=codebook, Ks=256)
-    compressed = pq.fit(X, w=-1, iter=20).compress(X)
+    compressed = pq.fit(X, w="cluster_size", iter=20).compress(X)
     with open(filename, 'w') as file:
         test_recall(compressed, Q, G, metric=metric, file=file)
 
