@@ -1,6 +1,7 @@
 import warnings
 import numpy as np
 from tqdm import tqdm
+from scipy.cluster.vq import vq
 from scipy.cluster.vq import _vq
 from scipy.cluster.vq import _valid_miss_meth
 from scipy.cluster.vq import _valid_init_meth
@@ -65,15 +66,19 @@ def weighted_kmeans(data, w, k, iter=10, minit='random',
                                       where=density_sum != 0)
             return new_code_book, has_members
         # Compute the nearest neighbor for each obs using the current code book
-        label = _vq.vq(data, code_book)[0]
+        label, dist = vq(data, code_book)
         # Update the code book by computing centroids
         if w is None:
             new_code_book, has_members = cluster_means(data, label, nc)
-        elif isinstance(w, int) and w == -1:
-            # number of element in each cluster
-            count = np.bincount(label, minlength=k)
-            density = np.reshape(count[label], (n ,1)).astype(data.dtype)
-            new_code_book, has_members = _weighted_cluster_means(density)
+        elif isinstance(w, int):
+            if w == -1:
+                # number of element in each cluster
+                count = np.bincount(label, minlength=k)
+                weight = np.reshape(count[label], (n, 1)).astype(data.dtype)
+                new_code_book, has_members = _weighted_cluster_means(weight)
+            if w == -2:
+                weight = dist
+                new_code_book, has_members = _weighted_cluster_means(weight)
         else:
             new_code_book, has_members = _weighted_cluster_means(w)
         if not has_members.all():
