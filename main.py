@@ -36,7 +36,7 @@ def run(dataset, metric, bandwidths, seed):
     pq = PQ(M=codebook, Ks=256)
     compressed = pq.fit(X, w=-1, iter=20).compress(X)
     with open(filename, 'w') as file:
-        test_recall(compressed, Q, G, metric=metric, file=open(filename, "w"))
+        test_recall(compressed, Q, G, metric=metric, file=file)
 
     for bandwidth in bandwidths:
         filename = "{}/pq{}_weighted_kmeans_{}.txt".format(dir, codebook, bandwidth)

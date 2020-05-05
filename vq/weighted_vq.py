@@ -77,7 +77,7 @@ def weighted_kmeans(data, w, k, iter=10, minit='random',
                 weight = np.reshape(count[label], (n, 1)).astype(data.dtype)
                 new_code_book, has_members = _weighted_cluster_means(weight)
             if w == -2:
-                weight = dist
+                weight = np.reshape(dist, (n, 1))
                 new_code_book, has_members = _weighted_cluster_means(weight)
         else:
             new_code_book, has_members = _weighted_cluster_means(w)
